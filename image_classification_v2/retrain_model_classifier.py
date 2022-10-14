@@ -9,10 +9,10 @@ image_data = tf.compat.v1.gfile.FastGFile(image_path, 'rb').read()
 
 # Loads label file, strips off carriage return
 label_lines = [line.rstrip() for line
-                   in tf.io.gfile.GFile("./labels.txt")]
+                   in tf.io.gfile.GFile("/tmp/output_labels.txt")]
 
 # Unpersists graph from file
-with tf.compat.v1.gfile.FastGFile("./output.pb", 'rb') as f:
+with tf.compat.v1.gfile.FastGFile("./output", 'rb') as f:
     graph_def = tf.compat.v1.GraphDef()
     graph_def.ParseFromString(f.read())
     _ = tf.import_graph_def(graph_def, name='')
@@ -31,3 +31,4 @@ with tf.compat.v1.Session() as sess:
         human_string = label_lines[node_id]
         score = predictions[0][node_id]
         print('%s (score = %.5f)' % (human_string, score))
+

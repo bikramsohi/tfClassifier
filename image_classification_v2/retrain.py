@@ -83,6 +83,8 @@ from tensorflow.python.framework import tensor_shape
 from tensorflow.python.platform import gfile
 from tensorflow.python.util import compat
 
+tf.compat.v1.disable_v2_behavior()
+
 FLAGS = None
 current_dir_path = os.path.dirname(os.path.realpath(__file__))
 # pylint: enable=line-too-long
@@ -747,9 +749,12 @@ def main(_):
 
   # Merge all the summaries and write them out to /tmp/retrain_logs (by default)
   merged = tf.compat.v1.summary.merge_all()
-  train_writer = tf.train.SummaryWriter(FLAGS.summaries_dir + '/train',
-                                        sess.graph)
-  validation_writer = tf.train.SummaryWriter(FLAGS.summaries_dir + '/validation')
+  
+  train_writer = tf.summary.create_file_writer(FLAGS.summaries_dir + '/train')
+  validation_writer = tf.summary.create_file_writer(FLAGS.summaries_dir + '/validation')
+  
+  # train_writer = tf.summary.FileWriter(FLAGS.summaries_dir + '/train', sess.graph)
+  # validation_writer = tf.summary.FileWriter(FLAGS.summaries_dir + '/validation')
 
   # Set up all our weights to their initial default values.
   init = tf.compat.v1.global_variables_initializer()
@@ -774,7 +779,13 @@ def main(_):
     train_summary, _ = sess.run([merged, train_step],
              feed_dict={bottleneck_input: train_bottlenecks,
                         ground_truth_input: train_ground_truth})
-    train_writer.add_summary(train_summary, i)
+    # train_writer.add_summary(train_summary, i)
+    
+    # with train_writer.as_default():
+    #  for step in range(100):
+    #    # other model code would go here
+    #    tf.summary.scalar("my_metric", 0.5, step=step)
+    #    writer.flush()
 
     # Every so often, print out how well the graph is training.
     is_last_step = (i + 1 == FLAGS.how_many_training_steps)
@@ -798,7 +809,7 @@ def main(_):
           [merged, evaluation_step],
           feed_dict={bottleneck_input: validation_bottlenecks,
                      ground_truth_input: validation_ground_truth})
-      validation_writer.add_summary(validation_summary, i)
+      # validation_writer.add_summary(validation_summary, i)
       print('%s: Step %d: Validation accuracy = %.1f%%' %
             (datetime.now(), i, validation_accuracy * 100))
 
